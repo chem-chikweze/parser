@@ -28,6 +28,7 @@ tuple<token, string> scanner::scan() {
     // "add", "sub", "mul", "div", "comma", "eof"
     // };
 
+    // for each bad character, 
     // skip white space
     while (isspace(c)) {
         c = cin.get();
@@ -53,14 +54,13 @@ tuple<token, string> scanner::scan() {
         else return make_tuple(t_id, token_image);
     }
     else if (isdigit(c)) {
+        // [d+ . d* | d* . d+ ] ( e [ + | - | ε ] d+ | ε )
+        // [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?
         do {
             token_image += c;
             c = cin.get();
         } while (isdigit(c));
-        
         if (c == '.'){
-            // [d+ . d* | d* . d+ ] ( e [ + | - | ε ] d+ | ε )
-            // [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?
             token_image += c;
             c = cin.get();
             if (isdigit(c)){
@@ -68,16 +68,17 @@ tuple<token, string> scanner::scan() {
                     token_image += c;
                     c = cin.get();
                 } while (isdigit(c));
-
                 if (c == 'e'){
                     token_image += c;
                     c = cin.get();
-
                     if (c == '+' || c == '-'){
                         token_image += c;
                         c = cin.get();
                         if(!isdigit(c)){
-                            exit(1);
+                            // case C:
+                            cerr << "lexical error: invalid real number. got '"
+                            <<  std::string(1, c) << "' (0x" << hex << c << ") after " << token_image << "\n";
+                            return scan();
                         } else{
                             do{
                                 token_image += c;
@@ -93,14 +94,20 @@ tuple<token, string> scanner::scan() {
                             }while (isdigit(c));
                             return make_tuple(t_r_num, token_image);
                         } else{
-                            exit(1);
+                            // case C:
+                            cerr << "lexical error: invalid real number. got '"
+                            <<std::string(1, c) << "' (0x" << hex << c << ") after " << token_image << "\n";
+                            return scan();
                         }
                     }
                 } else{
                     return make_tuple(t_r_num, token_image);
                 }
             } else {
-                exit(1);
+                // case C:
+                cerr << "lexical error: invalid real number. got '"
+                     << std::string(1, c) << "' (0x" << hex << c << ") after " << token_image << "\n";
+                return scan();
             }
         }else{
             return make_tuple(t_i_num, token_image);
@@ -109,9 +116,10 @@ tuple<token, string> scanner::scan() {
         case ':':
             c = cin.get();
             if (c != '=') {
-                cerr << "expected '=' after ':', got '"
-                     << c << "' (0x" << hex << c << ")\n";
-                exit(1);
+                // case C:
+                cerr << "lexical error: expected '=' after ':', got '"
+                     <<  std::string(1, c) << "' (0x" << hex << c << ")\n";
+                return scan();
             } else {
                 c = cin.get();
                 return make_tuple(t_gets, "");
@@ -120,9 +128,10 @@ tuple<token, string> scanner::scan() {
         case '=':
             c = cin.get();
             if (c != '=') {
-                cerr << "expected '=' after ':', got '"
-                     << c << "' (0x" << hex << c << ")\n";
-                exit(1);
+                // case C:
+                cerr << "lexical error: expected '=' after ':', got '"
+                     << std::string(1, c) << "' (0x" << hex << c << ")\n";
+                return scan();
             } else {
                 c = cin.get();
                 return make_tuple(t_equal, "");
@@ -155,10 +164,16 @@ tuple<token, string> scanner::scan() {
         case '/': c = cin.get(); return make_tuple(t_div, "");
         case '(': c = cin.get(); return make_tuple(t_lparen, "");
         case ')': c = cin.get(); return make_tuple(t_rparen, "");
-        case ';': c = cin.get(); return make_tuple(t_comma, "");
-        default:
-            cerr << "unexpected character '"
-                 << c << "' (0x" << hex << c << ")\n";
-            exit(1);
+        case ';': c = cin.get(); return make_tuple(t_semicolon, "");
+        default:   
+            // case A:
+            cerr << "lexical error: began with unexpected character '"
+                 << std::string(1, c) << "' (0x" << hex << c << ")\n";
+            c = cin.get();
+            return scan();
     }
-} // scan
+}
+
+class tree{
+
+};

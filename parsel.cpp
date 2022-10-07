@@ -43,6 +43,7 @@ const std::vector<token> FIRST_TT = {t_add, t_sub};
 const std::vector<token> FIRST_FT = {t_mul, t_div};
 const std::vector<token> FIRST_RO = {t_equal, t_not_equal, t_less, t_greater, t_less_or_equal, t_greater_or_equal, t_less_or_equal, t_less_or_equal};
 
+
 const std::vector<token> FOLLOW_P = {t_eof};
 const std::vector<token> FOLLOW_SL = {t_eof, t_end};
 const std::vector<token> FOLLOW_S = {t_semicolon};
@@ -50,25 +51,10 @@ const std::vector<token> FOLLOW_TP = {t_id};
 const std::vector<token> FOLLOW_C = {t_then, t_do};
 const std::vector<token> FOLLOW_E = {t_rparen, t_equal, t_not_equal, t_less, t_greater, t_less_or_equal, t_greater_or_equal, t_semicolon, t_then, t_do};
 const std::vector<token> FOLLOW_TT = {t_rparen, t_equal, t_not_equal, t_less, t_greater, t_less_or_equal, t_greater_or_equal, t_semicolon, t_then, t_do};
-const std::vector<token> FOLLOW_T = {t_add, t_sub, t_rparen, t_equal, t_not_equal, t_less, t_greater, t_less_or_equal, t_then, t_do, t_greater_or_equal, t_semicolon};
-const std::vector<token> FOLLOW_FT = {
-    t_add,
-    t_sub,
-    t_mul,
-    t_div,
-    t_rparen,
-    t_not_equal,
-    t_less,
-    t_greater,
-    t_equal,
-    t_less_or_equal,
-    t_then,
-    t_do,
-    t_greater_or_equal,
-    t_semicolon,
-};
-const std::vector<token> FOLLOW_F = {t_mul, t_div, t_add, t_sub, t_rparen, t_less, t_greater, t_less_or_equal, t_greater_or_equal, t_semicolon, t_equal, t_not_equal, t_then, t_do};
-const std::vector<token> FOLLOW_RO = {t_lparen, t_id, t_i_num, t_r_num, t_trunc, t_float};
+const std::vector<token> FOLLOW_T = {t_add, t_sub, t_rparen, t_equal, t_not_equal, t_less, t_greater, t_less_or_equal,  t_then, t_do, t_greater_or_equal, t_semicolon};
+const std::vector<token> FOLLOW_FT = {t_add, t_sub, t_mul, t_div, t_rparen, t_not_equal, t_less, t_greater, t_equal, t_less_or_equal, t_then, t_do, t_greater_or_equal, t_semicolon, };
+const std::vector<token> FOLLOW_F = {t_mul, t_div, t_add, t_sub, t_rparen,t_less, t_greater, t_less_or_equal, t_greater_or_equal, t_semicolon, t_equal, t_not_equal, t_then, t_do};
+const std::vector<token> FOLLOW_RO = {t_lparen, t_id, t_i_num, t_r_num, t_trunc, t_float };
 const std::vector<token> FOLLOW_AO = {t_lparen, t_id, t_i_num, t_r_num, t_trunc, t_float};
 const std::vector<token> FOLLOW_MO = {t_lparen, t_id, t_i_num, t_r_num, t_trunc, t_float};
 
@@ -115,23 +101,6 @@ public:
 
     void program()
     {
-        if (!contains(FIRST_P, next_token))
-        {
-            error();
-            while (true)
-            {
-                if (contains(FIRST_TP, next_token))
-                {
-                    break;
-                }
-                else if (contains(FOLLOW_P, next_token) || next_token == t_eof)
-                {
-                    return;
-                }
-                else
-                    tie(next_token, token_image) = s.scan();
-            }
-        }
         switch (next_token)
         {
         case t_int:
@@ -147,24 +116,15 @@ public:
             match(t_eof);
             break;
         default:
-            return;
-        }
-    }
-
-private:
-    void stmt_list()
-    {
-
-        if (!contains(FIRST_SL, next_token))
-        {
             error();
             while (true)
             {
-                if (contains(FIRST_SL, next_token))
+                if (contains(FIRST_P, next_token))
                 {
+                    program();
                     break;
                 }
-                else if (contains(FOLLOW_SL, next_token) || next_token == t_eof)
+                else if (contains(FOLLOW_P, next_token) || next_token == t_eof)
                 {
                     return;
                 }
@@ -172,7 +132,11 @@ private:
                     tie(next_token, token_image) = s.scan();
             }
         }
+    }
 
+private:
+    void stmt_list()
+    {
         switch (next_token)
         {
         case t_int:
@@ -193,21 +157,14 @@ private:
             break; // epsilon production
         default:
             error();
-        }
-    }
-
-    void stmt()
-    {
-        if (!contains(FIRST_S, next_token))
-        {
-            error();
             while (true)
             {
-                if (contains(FIRST_S, next_token))
+                if (contains(FIRST_SL, next_token))
                 {
+                    stmt_list();
                     break;
                 }
-                else if (contains(FOLLOW_S, next_token) || next_token == t_eof)
+                else if (contains(FOLLOW_SL, next_token) || next_token == t_eof)
                 {
                     return;
                 }
@@ -215,7 +172,10 @@ private:
                     tie(next_token, token_image) = s.scan();
             }
         }
+    }
 
+    void stmt()
+    {
         switch (next_token)
         {
         case t_int:
@@ -267,7 +227,20 @@ private:
             break;
         default:
             error();
-            break;
+            while (true)
+            {
+                if (contains(FIRST_S, next_token))
+                {
+                    stmt();
+                    break;
+                }
+                else if (contains(FOLLOW_S, next_token) || next_token == t_eof)
+                {
+                    return;
+                }
+                else
+                    tie(next_token, token_image) = s.scan();
+            }
         }
     }
 
@@ -287,29 +260,27 @@ private:
             cout << "predict type --> epsilon" << endl;
             break; // epsilon production
         default:
-            break;
-        }
-    }
-
-    void condition()
-    {
-        if (!contains(FIRST_C, next_token))
-        {
             error();
             while (true)
             {
-                if (contains(FIRST_C, next_token))
+                if (contains(FIRST_TP, next_token))
                 {
+                    type();
                     break;
                 }
-                else if (contains(FOLLOW_C, next_token) || next_token == t_eof)
+                else if (contains(FOLLOW_TP, next_token) || next_token == t_eof)
                 {
                     return;
                 }
                 else
                     tie(next_token, token_image) = s.scan();
             }
+            break;
         }
+    }
+
+    void condition()
+    {
         switch (next_token)
         {
         case t_lparen:
@@ -324,22 +295,15 @@ private:
             expr();
             break;
         default:
-            break;
-        }
-    }
-
-    void expr()
-    {
-        if (!contains(FIRST_E, next_token))
-        {
             error();
             while (true)
             {
-                if (contains(FIRST_E, next_token))
+                if (contains(FIRST_C, next_token))
                 {
+                    condition();
                     break;
                 }
-                else if (contains(FOLLOW_E, next_token) || next_token == t_eof)
+                else if (contains(FOLLOW_C, next_token) || next_token == t_eof)
                 {
                     return;
                 }
@@ -347,6 +311,10 @@ private:
                     tie(next_token, token_image) = s.scan();
             }
         }
+    }
+
+    void expr()
+    {
         switch (next_token)
         {
         case t_lparen:
@@ -360,22 +328,15 @@ private:
             term_tail();
             break;
         default:
-            break;
-        }
-    }
-
-    void term_tail()
-    {
-        if (!contains(FIRST_TT, next_token))
-        {
             error();
             while (true)
             {
-                if (contains(FIRST_TT, next_token))
+                if (contains(FIRST_E, next_token))
                 {
+                    expr();
                     break;
                 }
-                else if (contains(FOLLOW_TT, next_token) || next_token == t_eof)
+                else if (contains(FOLLOW_E, next_token) || next_token == t_eof)
                 {
                     return;
                 }
@@ -383,6 +344,10 @@ private:
                     tie(next_token, token_image) = s.scan();
             }
         }
+    }
+
+    void term_tail()
+    {
         switch (next_token)
         {
         case t_add:
@@ -405,22 +370,15 @@ private:
             cout << "predict term_tail --> epsilon" << endl;
             break; // epsilon production
         default:
-            break;
-        }
-    }
-
-    void term()
-    {
-        if (!contains(FIRST_T, next_token))
-        {
             error();
             while (true)
             {
-                if (contains(FIRST_T, next_token))
+                if (contains(FIRST_TT, next_token))
                 {
+                    term_tail();
                     break;
                 }
-                else if (contains(FOLLOW_T, next_token) || next_token == t_eof)
+                else if (contains(FOLLOW_TT, next_token) || next_token == t_eof)
                 {
                     return;
                 }
@@ -428,6 +386,10 @@ private:
                     tie(next_token, token_image) = s.scan();
             }
         }
+    }
+
+    void term()
+    {
         switch (next_token)
         {
         case t_lparen:
@@ -441,22 +403,14 @@ private:
             factor_tail();
             break;
         default:
-            break;
-        }
-    }
-
-    void factor_tail()
-    {
-        if (!contains(FIRST_FT, next_token))
-        {
-            error();
             while (true)
             {
-                if (contains(FIRST_FT, next_token))
+                if (contains(FIRST_T, next_token))
                 {
+                    term();
                     break;
                 }
-                else if (contains(FOLLOW_FT, next_token) || next_token == t_eof)
+                else if (contains(FOLLOW_SL, next_token) || next_token == t_eof)
                 {
                     return;
                 }
@@ -464,6 +418,10 @@ private:
                     tie(next_token, token_image) = s.scan();
             }
         }
+    }
+
+    void factor_tail()
+    {
         switch (next_token)
         {
         case t_mul:
@@ -489,22 +447,15 @@ private:
             cout << "predict factor_tail --> epsilon" << endl;
             break; // epsilon production
         default:
-            break;
-        }
-    }
-
-    void factor()
-    {
-        if (!contains(FIRST_F, next_token))
-        {
             error();
             while (true)
             {
-                if (contains(FIRST_F, next_token))
+                if (contains(FIRST_FT, next_token))
                 {
+                    factor_tail();
                     break;
                 }
-                else if (contains(FOLLOW_F, next_token) || next_token == t_eof)
+                else if (contains(FOLLOW_FT, next_token) || next_token == t_eof)
                 {
                     return;
                 }
@@ -512,6 +463,10 @@ private:
                     tie(next_token, token_image) = s.scan();
             }
         }
+    }
+
+    void factor()
+    {
         switch (next_token)
         {
         case t_i_num:
@@ -547,22 +502,15 @@ private:
             match(t_rparen);
             break;
         default:
-            break;
-        }
-    }
-
-    void ro()
-    {
-        if (!contains(FIRST_RO, next_token))
-        {
             error();
             while (true)
             {
-                if (contains(FIRST_RO, next_token))
+                if (contains(FIRST_F, next_token))
                 {
+                    factor();
                     break;
                 }
-                else if (contains(FOLLOW_RO, next_token) || next_token == t_eof)
+                else if (contains(FOLLOW_F, next_token) || next_token == t_eof)
                 {
                     return;
                 }
@@ -570,6 +518,10 @@ private:
                     tie(next_token, token_image) = s.scan();
             }
         }
+    }
+
+    void ro()
+    {
         switch (next_token)
         {
         case t_equal:
@@ -597,22 +549,15 @@ private:
             match(t_greater_or_equal);
             break;
         default:
-            break;
-        }
-    }
-
-    void add_op()
-    {
-        if (!contains(FIRST_AO, next_token))
-        {
             error();
             while (true)
             {
-                if (contains(FIRST_AO, next_token))
+                if (contains(FIRST_RO, next_token))
                 {
+                    ro();
                     break;
                 }
-                else if (contains(FOLLOW_AO, next_token) || next_token == t_eof)
+                else if (contains(FOLLOW_RO, next_token) || next_token == t_eof)
                 {
                     return;
                 }
@@ -620,6 +565,10 @@ private:
                     tie(next_token, token_image) = s.scan();
             }
         }
+    }
+
+    void add_op()
+    {
         switch (next_token)
         {
         case t_add:
@@ -631,22 +580,15 @@ private:
             match(t_sub);
             break;
         default:
-            break;
-        }
-    }
-
-    void mul_op()
-    {
-        if (!contains(FIRST_MO, next_token))
-        {
             error();
             while (true)
             {
-                if (contains(FIRST_MO, next_token))
+                if (contains(FIRST_AO, next_token))
                 {
+                    add_op();
                     break;
                 }
-                else if (contains(FOLLOW_MO, next_token) || next_token == t_eof)
+                else if (contains(FOLLOW_AO, next_token) || next_token == t_eof)
                 {
                     return;
                 }
@@ -654,6 +596,10 @@ private:
                     tie(next_token, token_image) = s.scan();
             }
         }
+    }
+
+    void mul_op()
+    {
         switch (next_token)
         {
         case t_mul:
@@ -665,14 +611,28 @@ private:
             match(t_div);
             break;
         default:
-            return;
+            error();
+            while (true)
+            {
+                if (contains(FIRST_MO, next_token))
+                {
+                    mul_op();
+                    break;
+                }
+                else if (contains(FOLLOW_MO, next_token) || next_token == t_eof)
+                {
+                    return;
+                }
+                else
+                    tie(next_token, token_image) = s.scan();
+            }
         }
     }
-}; // parser
+};
 
 int main()
 {
     parser p;
     p.program();
     return 0;
-};
+}
